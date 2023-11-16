@@ -53,7 +53,7 @@
                                             <img src="{{ asset('images/' . $product->image) }}" alt="Product Image" width="100">
                                         </td>
                                         <td>
-                                            <img src="{{ asset('thumbnails/' . $product->thumbnail) }}" alt="Product thumbnail" width="100">
+                                            <img src="{{ asset('thumbnails/' . $product->thumbnail) }}" alt="Product Thumbnail" width="100">
                                         </td>
                                         <td>
                                             <button wire:click="editProduct({{ $product->id }})" class="btn btn-primary btn-sm">Edit</button>
