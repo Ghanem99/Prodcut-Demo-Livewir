@@ -17,5 +17,3 @@ use App\Livewire\Product;
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('/products', Product::class);

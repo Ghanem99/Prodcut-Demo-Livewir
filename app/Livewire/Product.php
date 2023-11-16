@@ -6,6 +6,10 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Repositories\ProductRepository;
 
+use App\Actions\UpdateProductAction;
+use App\Actions\CreateProductAction;
+use App\Actions\DeleteProductAction;
+
 class Product extends Component
 {
     use WithFileUploads;
@@ -33,10 +37,20 @@ class Product extends Component
             ];
             
     private $productRepository;
+    private $updateProductAction;
+    private $createProductAction;
     
-    public function boot(ProductRepository $productRepository)
+    public function boot(
+        ProductRepository $productRepository, 
+        UpdateProductAction $updateProductAction, 
+        CreateProductAction $createProductAction, 
+        DeleteProductAction $deleteProductAction
+        )
     {
         $this->productRepository = $productRepository;
+        $this->updateProductAction = $updateProductAction;
+        $this->createProductAction = $createProductAction;
+        $this->deleteProductAction = $deleteProductAction;
     }
 
     public function resetFields()
@@ -64,37 +78,26 @@ class Product extends Component
     public function storeProduct()
     {
         $validated = $this->validate();
-        
-        if ($this->image) {
-            $validated['image'] = $this->image->store('public/images');
-        }
-        if ($this->thumbnail) {
-            $validated['thumbnail'] = $this->thumbnail->store('public/thumbnails');
-        }
 
-        try {
-            $this->productRepository->create($validated);
+        $this->createProductAction->execute($validated, $this->image, $this->thumbnail);
 
-            session()->flash('success', 'Product Created Successfully!!');
-            $this->resetFields();
-            $this->addProduct = false;
-        } catch (\Exception $ex) {
-            session()->flash('error', 'Something goes wrong!!');
-        }
+        $this->resetFields();
+        $this->addProduct = false;
     }
 
     public function editProduct($id)
     {
         try {
             $product = $this->productRepository->findOrFail($id);
+            
             if (!$product) {
                 session()->flash('error', 'Product not found');
             } else {
                 $this->name = $product->name;
                 $this->description = $product->description;
                 $this->price = $product->price;
-                $this->image = null;
-                $this->thumbnail = null;
+                $this->image = asset('storage/images/' . $product->image);
+                $this->thumbnail = asset('storage/thumbnails' . $product->thumbnail);
                 $this->productId = $product->id;
                 $this->updateProduct = true;
                 $this->addProduct = false;
@@ -107,23 +110,11 @@ class Product extends Component
     public function updateProductForm()
     {
         $validated = $this->validate();
-        
-        if ($this->image) {
-            $validated['image'] = $this->image->store('public/images');
-        }
-        if ($this->thumbnail) {
-            $validated['thumbnail'] = $this->thumbnail->store('public/thumbnails');
-        }
 
-        try {
-            $this->productRepository->update($this->productId, $validated);
-
-            session()->flash('success', 'Product Updated Successfully!!');
-            $this->resetFields();
-            $this->updateProduct = false;
-        } catch (\Exception $ex) {
-            session()->flash('error', 'Something goes wrong!!');
-        }
+        $this->updateProductAction->execute($this->productId, $validated, $this->image, $this->thumbnail);
+    
+        $this->resetFields();
+        $this->updateProduct = false;
     }
 
     public function cancelProduct()
@@ -135,11 +126,6 @@ class Product extends Component
 
     public function deleteProduct($id)
     {
-        try {
-            $this->productRepository->delete($id);
-            session()->flash('success', 'Product Deleted Successfully!!');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Something goes wrong!!');
-        }
+        $result = $this->deleteProductAction->execute($id);
     }
 }
