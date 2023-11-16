@@ -34,7 +34,7 @@ class Product extends Component
             
     private $productRepository;
     
-    public function __construct(ProductRepository $productRepository)
+    public function boot(ProductRepository $productRepository)
     {
         $this->productRepository = $productRepository;
     }
